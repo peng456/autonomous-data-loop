@@ -12,7 +12,7 @@
 
 **在线体验**：`https://peng456.github.io/autonomous-data-loop/`
 
-![Autonomous Data Loop](assets/og.png)
+![智驾数据闭环宇宙](assets/og.png?v=2)
 
 ---
 
