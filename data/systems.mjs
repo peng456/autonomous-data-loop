@@ -26,7 +26,7 @@ export default [
       { id: 'sensor',  label: '传感器\n视频 / CAN / Lidar', x: 45, y: 150, w: 200, h: 50, node: 'collect.sensor' },
       { id: 'enc',     label: '编码解码管理\n（信号采集）', x: 45, y: 218, w: 200, h: 44, node: 'stack.vehicle' },
       { id: 'trig',    label: '编码硬规则 trigger', x: 45, y: 280, w: 200, h: 30, node: 'collect.trigger' },
-      { id: 'dds',     label: 'DDS（车端消息总线）', x: 45, y: 326, w: 200, h: 28, node: 'stack.dds' },
+      { id: 'dds',     label: 'DDS\n车端消息总线', x: 45, y: 326, w: 200, h: 28, node: 'stack.dds' },
       { id: 'mesh1',   label: '车云通信 mesh（车端）', x: 45, y: 372, w: 200, h: 28, node: 'stack.mesh' },
       { id: 'shadowV', label: 'ShadowDaemon\n影子车端服务', x: 45, y: 424, w: 200, h: 48, node: 'stack.shadowd' },
       { id: 'rec',     label: 'data-record\n录制采集中间件', x: 45, y: 492, w: 200, h: 44, node: 'stack.datarecord' },
@@ -432,6 +432,257 @@ export default [
       '本质是「消息总线 + 服务发现 + 可靠投递」，不是简单的 HTTP 接口',
       '弱网是常态：断线重连、离线队列、幂等去重、优先级、重试退避必须齐备',
       '配置与任务要版本化 + 幂等 + 可回滚——一次误下发能搞停整个车队',
+    ],
+  },
+  {
+    id: 'mining',
+    title: '数据挖掘系统',
+    desc: '三路召回（结构化 / 向量 / UGC）→ 去重聚类 → 价值排序 → 场景库 / 待标注池 / 评测集',
+    lanes: [
+      {
+        title: '数据底座',
+        boxes: [
+          { id: 'b1', label: '元数据\nStarRocks', node: 'stack.starrocks' },
+          { id: 'b2', label: '片段文件\nOSS', node: 'infra.oss' },
+          { id: 'b3', label: '向量索引', node: 'infra.index' },
+          { id: 'b4', label: '标签体系', node: 'mine.taxonomy' },
+        ],
+      },
+      {
+        title: '三路召回',
+        boxes: [
+          { id: 'q1', label: 'UGC 检索\n安全员 / 运营上报', node: 'stack.mine' },
+          { id: 'q2', label: '向量检索\n以图搜图 / 相似场景', node: 'mine.retrieval' },
+          { id: 'q3', label: '标签组合检索\n结构化筛选', node: 'mine.taxonomy' },
+          { id: 'q4', label: '模型打分\n难例 / 不确定度', node: 'mine.uncertainty' },
+        ],
+      },
+      {
+        title: '结果处理',
+        boxes: [
+          { id: 'r1', label: '相似度去重', node: 'mine.cluster' },
+          { id: 'r2', label: '聚类取代表', node: 'mine.cluster' },
+          { id: 'r3', label: '人工快筛\n缩略图秒判', node: 'mine.human' },
+          { id: 'r4', label: '价值排序\n影响面 × 严重度', node: 'mine.mining' },
+        ],
+      },
+      {
+        title: '产出',
+        boxes: [
+          { id: 'o1', label: '场景库\n新场景入库', node: 'mine.lib' },
+          { id: 'o2', label: '待标注池', node: 'stack.label' },
+          { id: 'o3', label: '样本工厂', node: 'stack.sample' },
+          { id: 'o4', label: '评测集补充', node: 'eval.testset' },
+        ],
+      },
+    ],
+    links: [
+      ['b1', 'q3'], ['b2', 'q2'], ['b3', 'q2'], ['b4', 'q3'],
+      ['q1', 'r3'], ['q2', 'r1'], ['q3', 'r1'], ['q4', 'r4'],
+      ['r1', 'r2'], ['r2', 'r3'], ['r3', 'r4'], ['r4', 'o1'],
+      ['r4', 'o2'], ['o2', 'o3'], ['o1', 'o3'], ['o1', 'o4'],
+    ],
+    notes: [
+      '三路各管一件事：结构化回答「是不是」，向量回答「像不像」，UGC 回答「痛不痛」',
+      '挖出来 ≠ 有用：不去重、不聚类、不排序，标注产能会被重复样本淹没',
+      '闭环验证：新挖的场景要能证明「真的让指标变好」，否则只是搬运数据',
+    ],
+  },
+  {
+    id: 'labeling',
+    title: '数据打标系统',
+    desc: '待标注池 → 预标注模型与算子 → 后处理融合 → 人工修正/质检 → 自动标注率',
+    lanes: [
+      {
+        title: '输入',
+        boxes: [
+          { id: 'i1', label: '待标注池', node: 'stack.label' },
+          { id: 'i2', label: '原始片段\nOSS', node: 'infra.oss' },
+          { id: 'i3', label: '标定与时间戳', node: 'collect.calib' },
+        ],
+      },
+      {
+        title: '模型库',
+        boxes: [
+          { id: 'm1', label: '2D 检测' },
+          { id: 'm2', label: '3D 检测 / 分割', node: 'mine.autolabel' },
+          { id: 'm3', label: '跟踪与时序融合\n4D 标注', node: 'mine.4d' },
+          { id: 'm4', label: '占用栅格', node: 'mine.occ' },
+          { id: 'm5', label: '车道线 / 可行驶区', node: 'mine.seg' },
+          { id: 'm6', label: 'CLIP / 场景分类', node: 'mine.taxonomy' },
+        ],
+      },
+      {
+        title: '推理算子',
+        boxes: [
+          { id: 'k1', label: '预处理算子\nresize / 归一化' },
+          { id: 'k2', label: 'GridSample / Scatter\nVoxelization', node: 'ops.bev' },
+          { id: 'k3', label: 'NMS / 后处理', node: 'ops.nms' },
+          { id: 'k4', label: '量化推理引擎\nTensorRT', node: 'ops.infer' },
+          { id: 'k5', label: '算子覆盖率校验', node: 'ops.coverage' },
+        ],
+      },
+      {
+        title: '调度',
+        boxes: [
+          { id: 'd1', label: 'GPU 池 / 批处理', node: 'infra.compute' },
+          { id: 'd2', label: '优先级队列', node: 'infra.schedule' },
+          { id: 'd3', label: '模型版本管理', node: 'train.exp' },
+        ],
+      },
+      {
+        title: '产出',
+        boxes: [
+          { id: 'o1', label: '伪标签\n置信度过滤', node: 'mine.teacher' },
+          { id: 'o2', label: '人工修正\n人在回路', node: 'mine.human' },
+          { id: 'o3', label: '质检与黄金集', node: 'mine.qa' },
+          { id: 'o4', label: '自动标注率', node: 'mine.autolabel' },
+        ],
+      },
+    ],
+    links: [
+      ['i1', 'm1'], ['i2', 'm2'], ['i3', 'm3'],
+      ['m1', 'k1'], ['m2', 'k1'], ['m3', 'k2'], ['m4', 'k2'], ['m5', 'k3'],
+      ['k1', 'k4'], ['k2', 'k4'], ['k4', 'k3'], ['k5', 'k4'],
+      ['d1', 'k4'], ['d2', 'd1'], ['d3', 'k4'],
+      ['k3', 'o1'], ['o1', 'o2'], ['o2', 'o3'], ['o3', 'o4'],
+    ],
+    notes: [
+      '自动标注的质量上限由「教师模型」决定：离线特权 = 更大模型 + 未来帧 + 多传感器融合',
+      '推理算子是这条链的隐形成本：GridSample / Scatter / Voxelization 在部分芯片上极慢',
+      '自动标注率要按「采纳率」算（被人工接受的比例），不是「产出率」',
+      '教师模型的确认偏误要靠人工锚点与定期换模型来破',
+    ],
+  },
+  {
+    id: 'tagging',
+    title: '标签系统',
+    desc: '标签定义与版本 → 多来源打标 → 倒排索引 → 治理归一 → 检索/配比/评测消费',
+    lanes: [
+      {
+        title: '定义',
+        boxes: [
+          { id: 't1', label: '标签树\n域 / 场景 / 行为 / 系统状态', node: 'mine.taxonomy' },
+          { id: 't2', label: '取值域\n枚举 / 连续 / 多选' },
+          { id: 't3', label: '同义词与别名' },
+          { id: 't4', label: '标签版本\n与变更记录' },
+        ],
+      },
+      {
+        title: '打标来源',
+        boxes: [
+          { id: 's1', label: '人工打标\n运营 / 标注员' },
+          { id: 's2', label: '规则打标\n信号 / 事件触发', node: 'collect.trig-event' },
+          { id: 's3', label: '模型打标\n分类 / CLIP', node: 'mine.autolabel' },
+          { id: 's4', label: '大模型打标\n场景描述 caption' },
+        ],
+      },
+      {
+        title: '存储与索引',
+        boxes: [
+          { id: 'i1', label: '标签-片段倒排', node: 'infra.index' },
+          { id: 'i2', label: '标签统计\n分布 / 频次' },
+          { id: 'i3', label: '来源与置信度', node: 'infra.meta' },
+        ],
+      },
+      {
+        title: '治理',
+        boxes: [
+          { id: 'g1', label: '冲突合并' },
+          { id: 'g2', label: '同义归一' },
+          { id: 'g3', label: '历史回填重打' },
+          { id: 'g4', label: '质量抽检', node: 'mine.qa' },
+        ],
+      },
+      {
+        title: '消费',
+        boxes: [
+          { id: 'c1', label: '检索 / 圈选', node: 'stack.mine' },
+          { id: 'c2', label: '配比采样', node: 'mine.ratio' },
+          { id: 'c3', label: '评测分层', node: 'eval.testset' },
+          { id: 'c4', label: '看板统计', node: 'infra.analytics' },
+        ],
+      },
+    ],
+    links: [
+      ['t1', 't2'], ['t1', 't3'], ['t1', 't4'],
+      ['s1', 'i1'], ['s2', 'i1'], ['s3', 'i1'], ['s4', 'i1'],
+      ['i1', 'i2'], ['i1', 'i3'], ['g1', 'i1'], ['g2', 'i1'],
+      ['t4', 'g3'], ['g3', 'i1'], ['i3', 'g4'],
+      ['i1', 'c1'], ['i1', 'c2'], ['i2', 'c3'], ['i2', 'c4'],
+    ],
+    notes: [
+      '标签要正交可组合，避免同义重复（「夜间」vs「晚上」），否则检索会漏',
+      '标签来源必须可追溯：人工/规则/模型/大模型的可信度不同，配比与评测要区别对待',
+      '标签体系会演进，历史数据必须能批量回填重打，否则新旧数据不可比',
+    ],
+  },
+  {
+    id: 'sim',
+    title: '仿真系统',
+    desc: '场景来源 → 仿真引擎 → 被测系统（SIL/HIL/VIL）→ 指标与失败分类 → 置信度对齐',
+    lanes: [
+      {
+        title: '场景来源',
+        boxes: [
+          { id: 'a1', label: '真实数据回放', node: 'eval.replay' },
+          { id: 'a2', label: '参数化场景', node: 'eval.simgen' },
+          { id: 'a3', label: '对抗生成', node: 'eval.adversarial' },
+          { id: 'a4', label: '世界模型 / 生成式', node: 'train.world' },
+        ],
+      },
+      {
+        title: '仿真引擎',
+        boxes: [
+          { id: 'e1', label: '场景描述' },
+          { id: 'e2', label: '交通流\n背景车会反应' },
+          { id: 'e3', label: '车辆动力学' },
+          { id: 'e4', label: '传感器仿真\n相机 / 雷达 / 激光' },
+          { id: 'e5', label: '渲染' },
+        ],
+      },
+      {
+        title: '被测系统',
+        boxes: [
+          { id: 'u1', label: '感知' },
+          { id: 'u2', label: '预测' },
+          { id: 'u3', label: '规控' },
+          { id: 'u4', label: 'SIL', node: 'eval.sil' },
+          { id: 'u5', label: 'HIL', node: 'eval.sil' },
+          { id: 'u6', label: 'VIL' },
+        ],
+      },
+      {
+        title: '评测',
+        boxes: [
+          { id: 'm1', label: '指标计算\n碰撞 / 接管 / 舒适', node: 'eval.plan' },
+          { id: 'm2', label: '失败分类与归因' },
+          { id: 'm3', label: '覆盖率', node: 'eval.coverage' },
+          { id: 'm4', label: '回归门禁', node: 'eval.regression' },
+          { id: 'm5', label: '置信度对齐', node: 'eval.sim2real' },
+        ],
+      },
+      {
+        title: '运行',
+        boxes: [
+          { id: 'r1', label: '任务调度' },
+          { id: 'r2', label: '并行仿真\n百万级场景' },
+          { id: 'r3', label: '结果存储与看板' },
+        ],
+      },
+    ],
+    links: [
+      ['a1', 'e1'], ['a2', 'e1'], ['a3', 'e1'], ['a4', 'e1'],
+      ['e1', 'e2'], ['e2', 'e3'], ['e3', 'e4'], ['e4', 'e5'],
+      ['e5', 'u1'], ['u1', 'u2'], ['u2', 'u3'],
+      ['u3', 'u4'], ['u4', 'u5'], ['u5', 'u6'],
+      ['u3', 'm1'], ['m1', 'm2'], ['m2', 'm3'], ['m3', 'm4'], ['m4', 'm5'],
+      ['r1', 'r2'], ['r2', 'r3'],
+    ],
+    notes: [
+      '仿真不是越真越好，而是「够用且可规模化」——渲染很真但跑得慢，不如中等保真跑百万次',
+      '闭环仿真的关键是「背景车会对自车反应」，纯回放做不到',
+      '仿真置信度必须用「同场景仿真 vs 实车双跑」来证明，否则只能做筛选不能做结论',
     ],
   },
 ];
