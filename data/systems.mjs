@@ -685,4 +685,70 @@ export default [
       '仿真置信度必须用「同场景仿真 vs 实车双跑」来证明，否则只能做筛选不能做结论',
     ],
   },
+  {
+    id: 'vector',
+    title: '向量搜索系统',
+    desc: '特征抽取 → ANN 索引 → 文搜图 / 图搜图 / 图搜场景 → 排序去重 → 人工确认',
+    lanes: [
+      {
+        title: '特征',
+        boxes: [
+          { id: 'f1', label: '关键帧 / 缩略图', node: 'infra.oss' },
+          { id: 'f2', label: '图像特征\nCLIP / SigLIP' },
+          { id: 'f3', label: '文本特征\n中文 CLIP / 文本编码器' },
+          { id: 'f4', label: '轨迹 / 点云特征' },
+          { id: 'f5', label: '特征库\n向量 + 元数据', node: 'infra.index' },
+        ],
+      },
+      {
+        title: '索引',
+        boxes: [
+          { id: 'x1', label: 'ANN 索引\nHNSW / IVF', node: 'infra.index' },
+          { id: 'x2', label: '量化\nPQ / OPQ' },
+          { id: 'x3', label: '分片与增量更新' },
+          { id: 'x4', label: '元数据过滤\n标签 / 时间 / 车', node: 'mine.taxonomy' },
+        ],
+      },
+      {
+        title: '查询',
+        boxes: [
+          { id: 'q1', label: '文搜图\n「雨天夜里电动车逆行」', node: 'mine.retrieval' },
+          { id: 'q2', label: '图搜图\n以图搜图' },
+          { id: 'q3', label: '图搜场景\n多模态融合' },
+          { id: 'q4', label: '条件过滤 + TopK' },
+        ],
+      },
+      {
+        title: '排序与确认',
+        boxes: [
+          { id: 'r1', label: '相似度排序' },
+          { id: 'r2', label: '近邻去重', node: 'mine.cluster' },
+          { id: 'r3', label: '时序聚合\n同一段只留代表' },
+          { id: 'r4', label: '人工确认\n场景入库', node: 'mine.lib' },
+        ],
+      },
+      {
+        title: '工程',
+        boxes: [
+          { id: 'e1', label: '召回率@K 评估' },
+          { id: 'e2', label: '延迟 P99' },
+          { id: 'e3', label: 'GPU 编码' },
+          { id: 'e4', label: '缓存与热点' },
+        ],
+      },
+    ],
+    links: [
+      ['f1', 'f2'], ['f3', 'f5'], ['f2', 'f5'], ['f4', 'f5'],
+      ['f5', 'x1'], ['x1', 'x2'], ['f5', 'x3'], ['x1', 'x4'],
+      ['q1', 'q4'], ['q2', 'q4'], ['q3', 'q4'], ['q4', 'x1'],
+      ['x1', 'r1'], ['r1', 'r2'], ['r2', 'r3'], ['r3', 'r4'],
+      ['e1', 'x1'], ['e3', 'f2'], ['e2', 'r1'],
+    ],
+    notes: [
+      '文搜图的瓶颈在「文本-图像对齐质量」，不在索引；索引只决定召回速度与内存',
+      '图搜图适合「找相似长尾」，文搜图适合「描述得出但不知道在哪」的场景',
+      '召回率@K 必须用人工标注的查询集评估，不能只看 demo 观感',
+      '量化（PQ/OPQ）省内存但掉召回，要在「内存 × 召回」曲线上选点',
+    ],
+  },
 ];
