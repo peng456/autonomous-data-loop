@@ -63,7 +63,7 @@ if (errs.length) {
 
 const payload = {
   meta: {
-    title: '数据闭环宇宙',
+    title: '智驾数据闭环宇宙',
     subtitle: '无限画布 · 连接每一个知识点',
     version: '0.1.0',
     updated: new Date().toISOString().slice(0, 10),

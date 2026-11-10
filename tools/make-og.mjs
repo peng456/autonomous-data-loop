@@ -258,7 +258,7 @@ const GOLD = [232, 185, 92], INK = [231, 238, 251], MUT = [154, 169, 198], DIM =
 // 顶部小标签
 drawText('AUTONOMOUS DATA LOOP', 15, 72, 150, GOLD);
 // 主标题
-drawText('数据闭环宇宙', 62, 68, 232, INK);
+drawText('智驾数据闭环宇宙', 54, 68, 232, INK);
 // 副标题
 drawText('无限画布，连接每一个知识点', 24, 72, 286, MUT);
 // 分隔线
