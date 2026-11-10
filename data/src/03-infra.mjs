@@ -220,4 +220,16 @@ export default [
     ],
     q: '用 SLO + 对账讲可观测性，比罗列工具强。',
   },
+  {
+    id: 'infra.milvus', t: 'Milvus 向量数据库', en: 'Milvus', d: 'infra', lv: 3, p: 'infra.index',
+    def: '分布式向量数据库：Proxy 接入与路由、Query Node 检索、Index Node 建索引、Data Node 写入落段；依赖 etcd 存元数据、MinIO/OSS 存段文件、Pulsar/Kafka 做日志流。用 Collection/Partition 组织数据。',
+    pts: [
+      '索引选型：HNSW 召回高但吃内存；IVF_PQ 省内存掉召回；DiskANN 适合超大规模冷数据',
+      '度量要跟模型对齐：CLIP 特征通常用 COSINE 或 IP，用错会「看起来能搜但排序全乱」',
+      '标量过滤（expr）+ 向量检索的组合查询，决定能不能「按时间/车/标签先筛再搜」',
+      '写入是「段」为单位，段合并（compaction）与 load 策略直接影响查询延迟',
+    ],
+    q: '讲「四类节点 + 三个依赖 + 索引/度量怎么选」，再说一致性级别与段合并的取舍。',
+    x: [{ to: 'infra.index', r: 'include' }, { to: 'mine.retrieval', r: 'support' }],
+  },
 ];
