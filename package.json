@@ -1,0 +1,15 @@
+{
+  "name": "autonomous-data-loop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "数据闭环宇宙 · 无限画布，连接每一个知识点",
+  "scripts": {
+    "build": "node tools/build-data.mjs",
+    "serve": "python3 -m http.server 8080",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  },
+  "license": "MIT"
+}
