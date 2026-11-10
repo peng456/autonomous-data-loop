@@ -26,10 +26,10 @@ export default [
       { id: 'sensor',  label: '传感器\n视频 / CAN / Lidar', x: 45, y: 150, w: 200, h: 50, node: 'collect.sensor' },
       { id: 'enc',     label: '编码解码管理\n（信号采集）', x: 45, y: 218, w: 200, h: 44, node: 'stack.vehicle' },
       { id: 'trig',    label: '编码硬规则 trigger', x: 45, y: 280, w: 200, h: 30, node: 'collect.trigger' },
-      { id: 'dds',     label: 'DDS', x: 45, y: 326, w: 200, h: 28, node: 'stack.dds' },
+      { id: 'dds',     label: 'DDS（车端消息总线）', x: 45, y: 326, w: 200, h: 28, node: 'stack.dds' },
       { id: 'mesh1',   label: '车云通信 mesh（车端）', x: 45, y: 372, w: 200, h: 28, node: 'stack.mesh' },
-      { id: 'shadowV', label: '影子服务（车端）\n本身跟随 OTA', x: 45, y: 424, w: 200, h: 48, node: 'deploy.shadow' },
-      { id: 'rec',     label: 'datarecord\n（本身跟随 OTA）', x: 45, y: 492, w: 200, h: 44, node: 'stack.vehicle' },
+      { id: 'shadowV', label: 'ShadowDaemon\n影子车端服务', x: 45, y: 424, w: 200, h: 48, node: 'stack.shadowd' },
+      { id: 'rec',     label: 'data-record\n录制采集中间件', x: 45, y: 492, w: 200, h: 44, node: 'stack.datarecord' },
       { id: 'queue',   label: '队列', x: 258, y: 372, w: 52, h: 28, kind: 'pill' },
 
       // ── 云端 ──
@@ -189,15 +189,15 @@ export default [
         boxes: [
           { id: 'c1', label: '编码解码管理\n（信号采集，车端）', node: 'stack.vehicle' },
           { id: 'c2', label: '编码解码系统\ntrigger', node: 'collect.trigger' },
-          { id: 'c3', label: '影子服务\n（车端）', node: 'deploy.shadow' },
-          { id: 'c4', label: 'datarecord\n（本车/量产 OTA）' },
+          { id: 'c3', label: 'ShadowDaemon\n影子车端服务', node: 'stack.shadowd' },
+          { id: 'c4', label: 'data-record\n录制采集中间件', node: 'stack.datarecord' },
         ],
       },
       {
         title: '传输与合规',
         boxes: [
           { id: 't1', label: '双信号\n（量产车）' },
-          { id: 't2', label: 'DDS', node: 'stack.dds' },
+          { id: 't2', label: 'DDS\n车端消息总线', node: 'stack.dds' },
           { id: 't3', label: '车云 mesh（车端）', node: 'stack.mesh' },
           { id: 't4', label: '全量数据\nground truth' },
           { id: 't5', label: '数据合规切断\n或安全', node: 'stack.compliance' },

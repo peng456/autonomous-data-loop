@@ -2,9 +2,9 @@
 
 > 智驾数据闭环宇宙 · 无限画布，连接每一个知识点。
 > Infinite canvas for the autonomous-driving data loop.
-> **197 个节点 · 329 条关联 · 44 道面试题 · 7 个学习阶段**
+> **200 个节点 · 338 条关联 · 44 道面试题 · 7 个学习阶段 · 7 张架构图**
 
-一个纯静态的知识宇宙：把「智驾数据闭环」拆成 197 颗星星，画在一张可以无限漫游的画布上。点开任意一颗，能看到它是什么、面试怎么答、最容易踩什么坑。
+一个纯静态的知识宇宙：把「智驾数据闭环」拆成 200 颗星星，画在一张可以无限漫游的画布上。点开任意一颗，能看到它是什么、面试怎么答、最容易踩什么坑。
 
 [![Deploy](https://github.com/peng456/autonomous-data-loop/actions/workflows/pages.yml/badge.svg)](../../actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -33,7 +33,7 @@ git clone https://github.com/peng456/autonomous-data-loop
 cd autonomous-data-loop
 npm i
 
-npm run build    # 内容 → data/universe.js（197 节点）
+npm run build    # 内容 → data/universe.js（200 节点）
 npm run serve    # http://localhost:8080
 npm test         # 冒烟测试（jsdom，18 项断言）
 ```
