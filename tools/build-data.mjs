@@ -8,7 +8,7 @@ const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dir, '..');
 
 const { domains, root } = await import('../data/src/00-meta.mjs');
-const mods = ['01-why', '02-collect', '03-infra', '04-mine', '05-train', '06-eval', '07-deploy', '08-org', '09-stack', '12-ops'];
+const mods = ['01-why', '02-collect', '03-infra', '04-mine', '05-train', '06-eval', '07-deploy', '08-org', '09-stack', '12-ops', '13-vehicle'];
 const nodes = [root];
 for (const m of mods) {
   const list = (await import(`../data/src/${m}.mjs`)).default;

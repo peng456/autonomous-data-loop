@@ -2,9 +2,9 @@
 
 > 数据闭环宇宙 · 无限画布，连接每一个知识点。
 > Infinite canvas for the autonomous-driving data loop.
-> **189 个节点 · 308 条关联 · 44 道面试题 · 7 个学习阶段**
+> **197 个节点 · 329 条关联 · 44 道面试题 · 7 个学习阶段**
 
-一个纯静态的知识宇宙：把「智驾数据闭环」拆成 189 颗星星，画在一张可以无限漫游的画布上。点开任意一颗，能看到它是什么、面试怎么答、最容易踩什么坑。
+一个纯静态的知识宇宙：把「智驾数据闭环」拆成 197 颗星星，画在一张可以无限漫游的画布上。点开任意一颗，能看到它是什么、面试怎么答、最容易踩什么坑。
 
 [![Deploy](https://github.com/peng456/autonomous-data-loop/actions/workflows/pages.yml/badge.svg)](../../actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -29,7 +29,7 @@ git clone https://github.com/peng456/autonomous-data-loop
 cd autonomous-data-loop
 npm i
 
-npm run build    # 内容 → data/universe.js（189 节点）
+npm run build    # 内容 → data/universe.js（197 节点）
 npm run serve    # http://localhost:8080
 npm test         # 冒烟测试（jsdom，18 项断言）
 ```
@@ -72,7 +72,8 @@ universe.example.com
 │  │  ├─ 00-meta.mjs       # 域定义 + 根节点
 │  │  ├─ 01-why.mjs        # 范式与价值
 │  │  ├─ 02-collect.mjs    # 采集与回传
-│  │  └─ …                 # 共 11 个内容模块
+│  │  ├─ 13-vehicle.mjs    # 车端基础（Ubuntu/ROS2/DDS/GPU/CPU/域控/时同步）
+│  │  └─ …                 # 共 14 个源文件（域内容 + 题库 + 学习路径）
 │  └─ universe.js          # 构建产物（自动生成，勿手改）
 ├─ tools/build-data.mjs    # 内容 → 图数据 + 校验
 ├─ .github/workflows/      # Pages 部署

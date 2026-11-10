@@ -46,9 +46,9 @@ d.body.appendChild(s2);
 await new Promise(r => setTimeout(r, 150));
 
 ok('脚本零报错', errs.length === 0, errs.slice(0, 2).join(' | '));
-ok('数据加载', !!w.UNIVERSE && w.UNIVERSE.nodes.length === 189, `nodes=${w.UNIVERSE && w.UNIVERSE.nodes.length}`);
-ok('域筛选 = 10', d.querySelectorAll('#chips .chip').length === 10);
-ok('HUD 有探索计数', /已探索 0\/189/.test(d.querySelector('#expTxt').textContent), d.querySelector('#expTxt').textContent);
+ok('数据加载', !!w.UNIVERSE && w.UNIVERSE.nodes.length === 197, `nodes=${w.UNIVERSE && w.UNIVERSE.nodes.length}`);
+ok('域筛选 = 11', d.querySelectorAll('#chips .chip').length === 11);
+ok('HUD 有探索计数', /已探索 0\/197/.test(d.querySelector('#expTxt').textContent), d.querySelector('#expTxt').textContent);
 
 // 搜索 → 回车 → 打开详情 → 首读加 XP
 const q = d.querySelector('#q');
@@ -58,7 +58,7 @@ q.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
 await new Promise(r => setTimeout(r, 80));
 ok('搜索定位并打开面板', d.querySelector('#panel').classList.contains('open') && /影子/.test(d.querySelector('#panelBody').textContent));
 ok('首读获得 XP', /8 XP/.test(d.querySelector('#xp').textContent), d.querySelector('#xp').textContent);
-ok('探索计数 +1', /1\/189/.test(d.querySelector('#expTxt').textContent), d.querySelector('#expTxt').textContent);
+ok('探索计数 +1', /1\/197/.test(d.querySelector('#expTxt').textContent), d.querySelector('#expTxt').textContent);
 ok('面板有「标记已学」', !!d.querySelector('#markBtn'));
 
 // 学习页

@@ -9,6 +9,7 @@ export const domains = [
   { key: 'deploy',  name: '部署与回流',   color: '#c0e05a', desc: '压缩部署、OTA、影子模式、Bad Case' },
   { key: 'org',     name: '组织与工具链', color: '#b0a8c0', desc: '分工、指标、ROI、路线图、面试表达' },
   { key: 'stack',   name: '系统架构',     color: '#d4b0ff', desc: '车端链路、mesh、解析、StarRocks、样本中心、影子四层' },
+  { key: 'vehicle', name: '车端基础',     color: '#7ce38b', desc: 'Ubuntu、ROS2、DDS、GPU/CPU 配额、域控与时同步' },
   { key: 'ops',     name: '算子',         color: '#ff5f6d', desc: '数据加工算子、推理算子、覆盖率、精度对齐' },
 ];
 
