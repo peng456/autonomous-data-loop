@@ -12,6 +12,8 @@
 
 **在线体验**：`https://peng456.github.io/autonomous-data-loop/`
 
+![Autonomous Data Loop](assets/og.png)
+
 ---
 
 ## 三个要求，三种做法

@@ -9,7 +9,8 @@
     "test": "node test.mjs"
   },
   "devDependencies": {
-    "jsdom": "^26.0.0"
+    "jsdom": "^26.0.0",
+    "opentype.js": "^2.0.0"
   },
   "license": "MIT"
 }
