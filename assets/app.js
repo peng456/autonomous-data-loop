@@ -738,6 +738,8 @@
       `<button data-sys="${esc(x.id)}" class="${x.id === st.id ? 'on' : ''}">${esc(x.title)}</button>`).join('');
     $$('#sysTabs button').forEach(b => b.addEventListener('click', () => { sysId = b.dataset.sys; renderSystems(); }));
 
+    if (st.layout === 'free') { renderFreeSystem(st); return; }
+
     const lanes = st.lanes.map(l => `
       <div class="lane">
         <div class="lane-t">${esc(l.title)}</div>
@@ -760,6 +762,134 @@
 
     drawLinks(st);
     requestAnimationFrame(() => drawLinks(st));
+  }
+
+
+  // ───────── 架构视图 · 自由坐标布局（复原白板拓扑） ─────────
+  function fAnchor(b, side) {
+    if (side === 'l') return { x: b.x, y: b.y + b.h / 2 };
+    if (side === 'r') return { x: b.x + b.w, y: b.y + b.h / 2 };
+    if (side === 't') return { x: b.x + b.w / 2, y: b.y };
+    return { x: b.x + b.w / 2, y: b.y + b.h };
+  }
+
+  // 相邻两点若 x/y 都不同，插入一个拐点，保证全图正交
+  function fOrtho(points) {
+    const out = [points[0]];
+    for (let i = 1; i < points.length; i++) {
+      const prev = out[out.length - 1], cur = points[i];
+      if (Math.abs(prev.x - cur.x) > 0.5 && Math.abs(prev.y - cur.y) > 0.5) out.push({ x: cur.x, y: prev.y });
+      out.push(cur);
+    }
+    return out;
+  }
+
+  function fPoly(points) {
+    return fOrtho(points).map((p, i) => (i ? 'L' : 'M') + p.x + ',' + p.y).join(' ');
+  }
+
+  // 正交路由：给定起止框，自动选水平/垂直主干；可用 via 强制拐点
+  // 从框边缘选出朝向某点的出口
+  function fEdge(b, target) {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+    const dx = target.x - cx, dy = target.y - cy;
+    if (Math.abs(dx) >= Math.abs(dy)) return { x: dx > 0 ? b.x + b.w : b.x, y: cy };
+    return { x: cx, y: dy > 0 ? b.y + b.h : b.y };
+  }
+
+  // 正交路由：有 via 时按「出口 → 拐点 → 入口」走；否则按起止相对位置自动选主干
+  function fRoute(a, b, opt) {
+    const via = (opt && opt.via) || null;
+    const ac = { x: a.x + a.w / 2, y: a.y + a.h / 2 };
+    const bc = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
+
+    if (via && via.length) {
+      const pts = [];
+      const p0 = { x: via[0][0], y: via[0][1] };
+      const pn = { x: via[via.length - 1][0], y: via[via.length - 1][1] };
+      pts.push(fEdge(a, p0));
+      via.forEach(([x, y]) => pts.push({ x, y }));
+      pts.push(fEdge(b, pn));
+      return fPoly(pts);
+    }
+
+    const dx = bc.x - ac.x, dy = bc.y - ac.y;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      const s1 = dx > 0 ? { x: a.x + a.w, y: ac.y } : { x: a.x, y: ac.y };
+      const e1 = dx > 0 ? { x: b.x, y: bc.y } : { x: b.x + b.w, y: bc.y };
+      const mx = (s1.x + e1.x) / 2;
+      return fPoly([s1, { x: mx, y: s1.y }, { x: mx, y: e1.y }, e1]);
+    }
+    const s1 = dy > 0 ? { x: ac.x, y: a.y + a.h } : { x: ac.x, y: a.y };
+    const e1 = dy > 0 ? { x: bc.x, y: b.y } : { x: bc.x, y: b.y + b.h };
+    const my = (s1.y + e1.y) / 2;
+    return fPoly([s1, { x: s1.x, y: my }, { x: e1.x, y: my }, e1]);
+  }
+
+  function renderFreeSystem(st) {
+    const W = st.canvas.w, H = st.canvas.h;
+    const by = new Map(st.boxes.map(b => [b.id, b]));
+    const out = [];
+
+    out.push('<defs><marker id="farrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b8cc0"/></marker></defs>');
+
+    (st.zones || []).forEach(z => {
+      out.push(`<g class="fzone tone-${esc(z.tone || 'c')}"><rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="10"/><text class="fzone-t" x="${z.x + 10}" y="${z.y + 15}">${esc(z.label)}</text></g>`);
+    });
+
+    (st.braces || []).forEach(b => {
+      const x = b.x, y = b.y, hh = b.h;
+      const d = b.side === 'r'
+        ? `M${x - 8},${y} Q${x},${y} ${x},${y + 10} L${x},${y + hh - 10} Q${x},${y + hh} ${x - 8},${y + hh}`
+        : `M${x + 8},${y} Q${x},${y} ${x},${y + 10} L${x},${y + hh - 10} Q${x},${y + hh} ${x + 8},${y + hh}`;
+      const lx = b.side === 'r' ? x - 16 : x + 16;
+      const ly = y + hh / 2;
+      out.push(`<g class="fbrace"><path d="${d}"/><text transform="rotate(-90 ${lx} ${ly})" x="${lx}" y="${ly}" text-anchor="middle">${esc(b.label)}</text></g>`);
+    });
+
+    (st.annos || []).forEach(a => {
+      const lines = String(a.text).split('\n');
+      const tx = a.x + 8, ty = a.y + 17;
+      out.push(`<g class="fanno tone-${esc(a.tone || 'b')}"><rect x="${a.x}" y="${a.y}" width="${a.w}" height="${a.h}" rx="6"/>` +
+        lines.map((ln, i) => `<text x="${tx}" y="${ty + i * 13}">${esc(ln)}</text>`).join('') + '</g>');
+    });
+
+    (st.boxes || []).forEach(b => {
+      const lines = String(b.label).split('\n');
+      const lh = 12;
+      const cx = b.w / 2;
+      const cy = b.h / 2 - ((lines.length - 1) * lh) / 2 + 3.6;
+      const rx = b.kind === 'cloud' ? b.h / 2 : b.kind === 'pill' ? 14 : 5;
+      const cls = 'sbox fbox' + (b.node ? ' link' : '') + (b.kind ? ' k-' + b.kind : '') + (b.kind === 'label' ? ' k-label' : '');
+      out.push(`<g class="${cls}" data-box="${esc(b.id)}"${b.node ? ` data-node="${esc(b.node)}"` : ''} transform="translate(${b.x},${b.y})">` +
+        `<rect width="${b.w}" height="${b.h}" rx="${rx}"/>` +
+        lines.map((ln, i) => `<text x="${cx}" y="${cy + i * lh}" text-anchor="middle">${esc(ln)}</text>`).join('') + '</g>');
+    });
+
+    (st.links || []).forEach(l => {
+      const a = by.get(l[0]), b = by.get(l[1]);
+      if (!a || !b) return;
+      const opt = (l[3] && typeof l[3] === 'object') ? l[3] : null;
+      out.push(`<path class="flink" d="${fRoute(a, b, opt)}" marker-end="url(#farrow)"/>`);
+      const lbl = l[2];
+      if (lbl) {
+        const mx = (a.x + a.w / 2 + b.x + b.w / 2) / 2;
+        const my = (a.y + a.h / 2 + b.y + b.h / 2) / 2;
+        out.push(`<text class="flink-t" x="${mx}" y="${my - 4}" text-anchor="middle">${esc(lbl)}</text>`);
+      }
+    });
+
+    $('#sysWrap').innerHTML = `
+      <div class="shead"><h2>${esc(st.title)}</h2><p>${esc(st.desc || '')}</p></div>
+      <div class="fdiagram" id="diagram"><svg id="sysSvg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${out.join('')}</svg></div>
+      ${st.notes ? `<ul class="snotes">${st.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+      <p class="stip">带下划线的框可以点开对应知识点 · 与原架构白板同一张图（车端 → 云端 → 训练 → OTA → 回流）</p>
+    `;
+
+    $$('#sysWrap [data-node]').forEach(el => el.addEventListener('click', () => {
+      setView('explore');
+      selectNode(el.dataset.node, true);
+    }));
   }
 
   function drawLinks(st) {

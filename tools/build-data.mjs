@@ -34,7 +34,10 @@ for (const n of nodes) {
 }
 for (const q of qa) if (!dk.has(q.d)) errs.push(`QA 域错误 ${q.d}`);
 for (const st of path) for (const id of st.nodes) if (!byId.has(id)) errs.push(`路径节点不存在 ${id}`);
-for (const sys of systems) for (const ln of sys.lanes) for (const bx of ln.boxes) if (bx.node && !byId.has(bx.node)) errs.push(`架构框引用不存在的节点 ${bx.node} @ ${sys.id}/${bx.id}`);
+for (const sys of systems) {
+  const sboxes = sys.layout === 'free' ? (sys.boxes || []) : (sys.lanes || []).flatMap(l => l.boxes || []);
+  for (const bx of sboxes) if (bx.node && !byId.has(bx.node)) errs.push(`架构框引用不存在的节点 ${bx.node} @ ${sys.id}/${bx.id}`);
+}
 
 const edges = [];
 const push = (s, t, r, l) => {
