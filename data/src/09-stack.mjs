@@ -185,4 +185,16 @@ export default [
     q: '讲「车端优先脱敏 + 审计留痕 + 任务精度权衡」。',
     x: [{ to: 'collect.privacy', r: 'include' }, { to: 'collect.compliance', r: 'depend' }],
   },
+  {
+    id: 'stack.ota', t: 'OTA 系统（云端/车端）', en: 'OTA System', d: 'stack', lv: 2, p: 'stack.arch',
+    def: '升级包制作与签名 → 差分分发 → 车端 A/B 分区安装 → 校验 → 回滚。云端负责批次、灰度、断点续传；车端负责升级条件（驻车/电量/网络）、断电保护与失败自愈。',
+    pts: [
+      '模型包与整车包解耦：模型可周级高频更新，整车软件按版本走',
+      '灰度按车队分组推进：内测车 → 小批量 → 全量，异常自动熔断',
+      '升级失败要能自愈：看门狗 + 自动回退 + 人工兜底',
+      '看板指标：升级成功率、回滚率、平均耗时',
+    ],
+    q: '讲「A/B 分区 + 灰度 + 自动回退」三件套，并说清模型包如何独立发版。',
+    x: [{ to: 'deploy.ota', r: 'include' }, { to: 'deploy.rollback', r: 'support' }],
+  },
 ];

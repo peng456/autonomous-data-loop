@@ -16,6 +16,7 @@ for (const m of mods) {
 }
 const qa = (await import('../data/src/10-qa.mjs')).default;
 const { path } = await import('../data/src/11-path.mjs');
+const systems = (await import('../data/systems.mjs')).default;
 
 const byId = new Map(nodes.map(n => [n.id, n]));
 const errs = [];
@@ -33,6 +34,7 @@ for (const n of nodes) {
 }
 for (const q of qa) if (!dk.has(q.d)) errs.push(`QA 域错误 ${q.d}`);
 for (const st of path) for (const id of st.nodes) if (!byId.has(id)) errs.push(`路径节点不存在 ${id}`);
+for (const sys of systems) for (const ln of sys.lanes) for (const bx of ln.boxes) if (bx.node && !byId.has(bx.node)) errs.push(`架构框引用不存在的节点 ${bx.node} @ ${sys.id}/${bx.id}`);
 
 const edges = [];
 const push = (s, t, r, l) => {
@@ -76,6 +78,7 @@ const payload = {
   edges: edgesU,
   qa,
   path,
+  systems,
 };
 
 const json = JSON.stringify(payload);

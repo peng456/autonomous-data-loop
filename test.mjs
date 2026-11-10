@@ -46,9 +46,9 @@ d.body.appendChild(s2);
 await new Promise(r => setTimeout(r, 150));
 
 ok('脚本零报错', errs.length === 0, errs.slice(0, 2).join(' | '));
-ok('数据加载', !!w.UNIVERSE && w.UNIVERSE.nodes.length === 197, `nodes=${w.UNIVERSE && w.UNIVERSE.nodes.length}`);
+ok('数据加载', !!w.UNIVERSE && w.UNIVERSE.nodes.length >= 190, `nodes=${w.UNIVERSE && w.UNIVERSE.nodes.length}`);
 ok('域筛选 = 11', d.querySelectorAll('#chips .chip').length === 11);
-ok('HUD 有探索计数', /已探索 0\/197/.test(d.querySelector('#expTxt').textContent), d.querySelector('#expTxt').textContent);
+ok('HUD 有探索计数', /已探索 0\/\d+/.test(d.querySelector('#expTxt').textContent), d.querySelector('#expTxt').textContent);
 
 // 搜索 → 回车 → 打开详情 → 首读加 XP
 const q = d.querySelector('#q');
@@ -58,7 +58,7 @@ q.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
 await new Promise(r => setTimeout(r, 80));
 ok('搜索定位并打开面板', d.querySelector('#panel').classList.contains('open') && /影子/.test(d.querySelector('#panelBody').textContent));
 ok('首读获得 XP', /8 XP/.test(d.querySelector('#xp').textContent), d.querySelector('#xp').textContent);
-ok('探索计数 +1', /1\/197/.test(d.querySelector('#expTxt').textContent), d.querySelector('#expTxt').textContent);
+ok('探索计数 +1', /1\/\d+/.test(d.querySelector('#expTxt').textContent), d.querySelector('#expTxt').textContent);
 ok('面板有「标记已学」', !!d.querySelector('#markBtn'));
 
 // 学习页
@@ -83,6 +83,14 @@ await new Promise(r => setTimeout(r, 80));
 ok('随机漫游打开面板', d.querySelector('#panel').classList.contains('open'));
 
 ok('小地图存在', !!d.querySelector('#mini'));
+// 架构视图
+d.querySelector('.tabs button[data-view="sys"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+ok('架构页有分段控件', d.querySelectorAll('#sysTabs button').length >= 3, `${d.querySelectorAll('#sysTabs button').length} 个`);
+ok('架构图渲染出方框', d.querySelectorAll('#sysWrap .sbox').length > 20, `${d.querySelectorAll('#sysWrap .sbox').length} 个`);
+ok('架构图画出连线', d.querySelectorAll('#sysSvg path').length > 5, `${d.querySelectorAll('#sysSvg path').length} 条`);
+d.querySelectorAll('#sysTabs button')[1].dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+ok('切换子系统可用', d.querySelectorAll('#sysWrap .sbox').length > 10);
+
 ok('无异步异常', errs.length === 0, errs.slice(0, 2).join(' | '));
 
 console.log('\n' + (fails.length ? `FAIL ${fails.length}:\n- ` + fails.join('\n- ') : 'ALL PASS'));

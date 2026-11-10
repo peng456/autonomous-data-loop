@@ -427,6 +427,10 @@
     W = r.width; H = r.height;
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     draw();
+    if (currentView === 'sys') {
+      const st = (U.systems || []).find(x => x.id === sysId);
+      if (st) setTimeout(() => drawLinks(st), 40);
+    }
   }
 
   // ───────── XP / 等级 / toast ─────────
@@ -612,6 +616,7 @@
     $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === v));
     $$('.view').forEach(s => s.classList.toggle('on', s.id === 'v-' + v));
     if (v === 'explore') { resize(); fitView(false); }
+    if (v === 'sys') renderSystems();
     if (v === 'learn') renderLearn();
     if (v === 'quiz') renderQuiz();
   }
@@ -718,6 +723,86 @@
       card.classList.remove('open');
       b.closest('.grade').innerHTML = '<span style="font-size:11px;color:#5f6f8d">已记录</span>';
     }));
+  }
+
+  // ───────── 架构视图 ─────────
+  let sysId = 'global';
+
+  function renderSystems() {
+    const list = U.systems || [];
+    if (!list.length) return;
+    const st = list.find(x => x.id === sysId) || list[0];
+    sysId = st.id;
+
+    $('#sysTabs').innerHTML = list.map(x =>
+      `<button data-sys="${esc(x.id)}" class="${x.id === st.id ? 'on' : ''}">${esc(x.title)}</button>`).join('');
+    $$('#sysTabs button').forEach(b => b.addEventListener('click', () => { sysId = b.dataset.sys; renderSystems(); }));
+
+    const lanes = st.lanes.map(l => `
+      <div class="lane">
+        <div class="lane-t">${esc(l.title)}</div>
+        <div class="lane-b">
+          ${l.boxes.map(bx => `<div class="sbox${bx.node ? ' link' : ''}" data-box="${esc(bx.id)}"${bx.node ? ` data-node="${esc(bx.node)}"` : ''}>${esc(bx.label).replace(/\\n/g, '<br>')}</div>`).join('')}
+        </div>
+      </div>`).join('');
+
+    $('#sysWrap').innerHTML = `
+      <div class="shead"><h2>${esc(st.title)}</h2><p>${esc(st.desc || '')}</p></div>
+      <div class="diagram" id="diagram">${lanes}<svg id="sysSvg"></svg></div>
+      ${st.notes ? `<ul class="snotes">${st.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+      <p class="stip">带下划线的框可以点开对应知识点</p>
+    `;
+
+    $$('#sysWrap [data-node]').forEach(el => el.addEventListener('click', () => {
+      setView('explore');
+      selectNode(el.dataset.node, true);
+    }));
+
+    drawLinks(st);
+    requestAnimationFrame(() => drawLinks(st));
+  }
+
+  function drawLinks(st) {
+    const host = $('#diagram'), svg = $('#sysSvg');
+    if (!host || !svg) return;
+    const base = host.getBoundingClientRect();
+    const W2 = host.scrollWidth, H2 = host.scrollHeight;
+    svg.setAttribute('viewBox', `0 0 ${W2} ${H2}`);
+    svg.setAttribute('width', W2);
+    svg.setAttribute('height', H2);
+
+    const pos = new Map();
+    host.querySelectorAll('[data-box]').forEach(el => {
+      const r = el.getBoundingClientRect();
+      pos.set(el.dataset.box, { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height });
+    });
+
+    const out = [];
+    (st.links || []).forEach(([a, b, label]) => {
+      const A = pos.get(a), B = pos.get(b);
+      if (!A || !B) return;
+      let x1, y1, x2, y2, c1x, c1y, c2x, c2y;
+      const sameRow = Math.abs((A.y + A.h / 2) - (B.y + B.h / 2)) < 26;
+      if (sameRow) {
+        const right = B.x > A.x;
+        x1 = right ? A.x + A.w : A.x; y1 = A.y + A.h / 2;
+        x2 = right ? B.x : B.x + B.w; y2 = B.y + B.h / 2;
+        const mx = (x1 + x2) / 2;
+        c1x = mx; c1y = y1; c2x = mx; c2y = y2;
+      } else {
+        const down = B.y > A.y;
+        x1 = A.x + A.w / 2; y1 = down ? A.y + A.h : A.y;
+        x2 = B.x + B.w / 2; y2 = down ? B.y : B.y + B.h;
+        const my = (y1 + y2) / 2;
+        c1x = x1; c1y = my; c2x = x2; c2y = my;
+      }
+      out.push(`<path d="M${x1},${y1} C${c1x},${c1y} ${c2x},${c2y} ${x2},${y2}" marker-end="url(#ah)"/>`);
+      if (label) out.push(`<text x="${(x1 + x2) / 2 + 5}" y="${(y1 + y2) / 2 - 5}" class="elabel">${esc(label)}</text>`);
+    });
+
+    svg.innerHTML =
+      `<defs><marker id="ah" markerWidth="7" markerHeight="7" refX="6.2" refY="3.5" orient="auto">` +
+      `<path d="M0,0 L7,3.5 L0,7 z" fill="#46618e"/></marker></defs>` + out.join('');
   }
 
   // ───────── 漫游 ─────────
