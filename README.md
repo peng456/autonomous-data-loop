@@ -6,11 +6,11 @@
 
 一个纯静态的知识宇宙：把「智驾数据闭环」拆成 189 颗星星，画在一张可以无限漫游的画布上。点开任意一颗，能看到它是什么、面试怎么答、最容易踩什么坑。
 
-[![Deploy](https://github.com/USER/autonomous-data-loop/actions/workflows/pages.yml/badge.svg)](../../actions)
+[![Deploy](https://github.com/peng456/autonomous-data-loop/actions/workflows/pages.yml/badge.svg)](../../actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Content: CC BY-SA 4.0](https://img.shields.io/badge/content-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 
-**在线体验**：`https://<你的用户名>.github.io/autonomous-data-loop/`
+**在线体验**：`https://peng456.github.io/autonomous-data-loop/`
 
 ---
 
@@ -25,7 +25,7 @@
 ## 快速开始
 
 ```bash
-git clone https://github.com/USER/autonomous-data-loop
+git clone https://github.com/peng456/autonomous-data-loop
 cd autonomous-data-loop
 npm i
 
