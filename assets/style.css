@@ -257,21 +257,29 @@ main{position:relative;flex:1;min-height:0}
 
 /* ── 移动端 ── */
 @media (max-width:820px){
-  .hud{padding:7px 10px;gap:8px}
-  .lt h1{font-size:13px}
+  /* 三行栅格：标题 / 工具 / 页签 */
+  body{overflow-x:hidden}
+  .hud{display:grid;grid-template-columns:1fr auto;gap:7px 8px;padding:8px 10px 9px}
+  .logo{grid-column:1;grid-row:1;min-width:0}
+  .orb{width:10px;height:10px}
+  .lt h1{font-size:12.5px;letter-spacing:0}
   .lt p{display:none}
-  .stats{min-width:0;flex:1 1 90px}
-  .level span{display:none}
-  .meta{font-size:9px}
-  .search{min-width:0;width:120px}
-  .tools{gap:4px}
-  .icon{width:29px;height:29px;font-size:13px}
-  .tabs button{padding:5px 9px;font-size:12px}
-  #mini{width:104px;height:73px;right:10px;bottom:10px;opacity:.85}
-  .minilabel{display:none}
-  .chips{right:124px;left:8px;bottom:8px;max-height:26%}
-  .chip{font-size:10.5px;padding:3px 8px}
+  .stats{grid-column:2;grid-row:1;flex-direction:row;align-items:center;gap:6px;min-width:0}
+  .lvl{display:none}
+  .xpbar{display:none}
+  .meta{font-size:9.5px;gap:3px;white-space:nowrap}
+  .tools{grid-column:1/-1;grid-row:2;width:100%;margin:0;gap:5px}
+  .search{flex:1 1 auto;min-width:0;width:auto;padding:5px 8px}
+  .search input{font-size:12px}
+  .icon{width:30px;height:30px;flex:none}
+  .tabs{grid-column:1/-1;grid-row:3;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:3px}
+  .tabs button{padding:7px 0;font-size:12.5px;text-align:center}
+  .chips{left:8px;right:118px;bottom:8px;max-height:none;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;font-size:10.5px;padding:4px 9px}
   .hint{display:none}
+  #mini{width:102px;height:71px;right:9px;bottom:9px;opacity:.9}
+  .minilabel{display:none}
   #panel{top:auto;bottom:0;left:0;right:0;width:100%;max-width:100%;height:auto;max-height:76vh;
     border-left:0;border-top:1px solid var(--line2);border-radius:16px 16px 0 0;transform:translateY(103%)}
   #panel.open{transform:none}
@@ -280,6 +288,7 @@ main{position:relative;flex:1;min-height:0}
   .qh .dm{display:none}
   .qb{padding-left:13px}
   .grade{padding-left:13px}
+  #toast{bottom:96px}
 }
 
 /* ── 架构视图 · 自由坐标布局（复原白板拓扑） ── */
