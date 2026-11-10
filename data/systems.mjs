@@ -268,4 +268,170 @@ export default [
       '「数据利用率」与「闭环周期」是这条链路最值得盯的两个数',
     ],
   },
+  {
+    id: 'parse',
+    title: '数据解析系统',
+    desc: '原始包 → 优先级队列 → 解码/对齐/脱敏/质检 → 元数据与片段入库',
+    lanes: [
+      {
+        title: '接入',
+        boxes: [
+          { id: 'i1', label: '原始包\nbag / mcap / 压缩包' },
+          { id: 'i2', label: '对象存储落地', node: 'infra.oss' },
+          { id: 'i3', label: '优先级队列\n事故 > 影子 > 定向 > 常规', node: 'stack.parse' },
+          { id: 'i4', label: '配额与限流' },
+        ],
+      },
+      {
+        title: '解析流水线',
+        boxes: [
+          { id: 'p1', label: '解包 / 校验', node: 'ops.decode' },
+          { id: 'p2', label: '解码\nGPU 硬解 H.265 / 点云' },
+          { id: 'p3', label: '时间对齐与标定', node: 'ops.align' },
+          { id: 'p4', label: '脱敏\n人像 / 车牌', node: 'ops.redact' },
+          { id: 'p5', label: '质检\n清晰度 / 曝光 / 丢帧', node: 'ops.quality' },
+          { id: 'p6', label: '关键帧抽取', node: 'stack.pre' },
+        ],
+      },
+      {
+        title: '产出',
+        boxes: [
+          { id: 'o1', label: '元数据 → StarRocks', node: 'stack.starrocks' },
+          { id: 'o2', label: '片段 → OSS', node: 'infra.oss' },
+          { id: 'o3', label: '缩略图 / 预览' },
+          { id: 'o4', label: '事件 → Kafka\n触发挖掘与标注' },
+        ],
+      },
+      {
+        title: '可靠性',
+        boxes: [
+          { id: 'r1', label: '消费延迟 p95/p99', node: 'infra.observability' },
+          { id: 'r2', label: '死信队列与重放' },
+          { id: 'r3', label: '幂等（内容寻址）', node: 'ops.idempotent' },
+          { id: 'r4', label: '积压告警与扩容' },
+        ],
+      },
+    ],
+    links: [
+      ['i1', 'i2'], ['i2', 'i3'], ['i3', 'i4'], ['i3', 'p1'], ['p1', 'p2'],
+      ['p2', 'p3'], ['p3', 'p4'], ['p4', 'p5'], ['p5', 'p6'], ['p6', 'o1'],
+      ['p6', 'o2'], ['p6', 'o3'], ['o1', 'o4'], ['p5', 'r2'], ['r3', 'p1'],
+    ],
+    notes: [
+      '核心指标是「消费延迟」与「积压量」，不是吞吐峰值——事故片段排在常规数据后面就等于没有闭环',
+      '防「大包饿死小包」：按大小分片 + 权重轮询；失败重试必须幂等',
+      '解码是算力大头，GPU 硬解与 CPU 软解差一个数量级',
+    ],
+  },
+  {
+    id: 'vconfig',
+    title: '车端配置系统（4000+ 信号）',
+    desc: '信号字典 → 采集策略 → 配置下发与生效校验 → 解析入库 → 诊断/告警/看板',
+    lanes: [
+      {
+        title: '信号源',
+        boxes: [
+          { id: 'g1', label: 'CAN 总线' },
+          { id: 'g2', label: '以太网' },
+          { id: 'g3', label: '诊断信号' },
+          { id: 'g4', label: '域控 / 传感器状态' },
+        ],
+      },
+      {
+        title: '车端采集',
+        boxes: [
+          { id: 'c1', label: '信号字典\n4000+ 路定义', node: 'stack.signal' },
+          { id: 'c2', label: '采集策略\n频率 / 降采样 / 触发' },
+          { id: 'c3', label: '环形缓冲\n保留触发前 N 秒' },
+          { id: 'c4', label: '本地缓存\n断网续传' },
+        ],
+      },
+      {
+        title: '配置下发',
+        boxes: [
+          { id: 'w1', label: 'Config 服务', node: 'stack.config' },
+          { id: 'w2', label: '版本管理' },
+          { id: 'w3', label: '灰度批次\n1% → 全量' },
+          { id: 'w4', label: '生效校验\n期望 vs 实际' },
+          { id: 'w5', label: '一键回滚' },
+        ],
+      },
+      {
+        title: '云端处理',
+        boxes: [
+          { id: 's1', label: '信号解析入库\n时序库', node: 'infra.meta' },
+          { id: 's2', label: '告警规则' },
+          { id: 's3', label: '诊断 / 健康度' },
+          { id: 's4', label: '看板与统计', node: 'infra.analytics' },
+          { id: 's5', label: '影子对比输入', node: 'deploy.diff' },
+        ],
+      },
+    ],
+    links: [
+      ['g1', 'c1'], ['g2', 'c1'], ['g3', 'c1'], ['g4', 'c1'],
+      ['c1', 'c2'], ['c2', 'c3'], ['c3', 'c4'], ['c4', 's1'],
+      ['w1', 'w2'], ['w2', 'w3'], ['w3', 'w4'], ['w4', 'c2'], ['w4', 'w5'],
+      ['s1', 's2'], ['s1', 's3'], ['s2', 's4'], ['s1', 's5'],
+    ],
+    notes: [
+      '4000+ 信号的真正难点不是采集，而是「信号字典」：名称、单位、频率、取值范围、含义，没有字典就没人看得懂',
+      '配置错一次能影响整个车队 → 必须灰度 + 生效对账 + 一键回滚',
+      '信号要与视频/点云按时间戳对齐，否则做不了因果分析（接管前 10 秒的踏板曲线）',
+    ],
+  },
+  {
+    id: 'mesh',
+    title: '车云通信 Li-Mesh',
+    desc: '车端 DDS / 业务 ↔ 长连接与消息队列 ↔ 云端 configor / job 服务',
+    lanes: [
+      {
+        title: '车端',
+        boxes: [
+          { id: 'v1', label: '业务模块' },
+          { id: 'v2', label: 'DDS\n车端内部总线', node: 'stack.dds' },
+          { id: 'v3', label: 'mesh client', node: 'stack.mesh' },
+          { id: 'v4', label: '本地队列\n断网缓存', node: 'collect.resume' },
+        ],
+      },
+      {
+        title: '通道',
+        boxes: [
+          { id: 't1', label: '长连接\n即时通信（即时指令）' },
+          { id: 't2', label: '消息队列\n上下行消息' },
+          { id: 't3', label: '文件通道\n大批量数据' },
+          { id: 't4', label: '心跳 / 重连\n多路复用' },
+        ],
+      },
+      {
+        title: '云端',
+        boxes: [
+          { id: 's1', label: 'mesh server', node: 'stack.mesh' },
+          { id: 's2', label: 'Configor 服务\n配置下发', node: 'stack.config' },
+          { id: 's3', label: 'Job 服务\n任务编排', node: 'stack.arch' },
+          { id: 's4', label: '消息路由' },
+          { id: 's5', label: '上行落 Kafka', node: 'infra.pipeline' },
+        ],
+      },
+      {
+        title: '保障',
+        boxes: [
+          { id: 'q1', label: '幂等投递' },
+          { id: 'q2', label: '优先级与限流' },
+          { id: 'q3', label: '加密\nTLS / KMS', node: 'stack.compliance' },
+          { id: 'q4', label: '审计与链路追踪', node: 'infra.observability' },
+        ],
+      },
+    ],
+    links: [
+      ['v1', 'v2'], ['v2', 'v3'], ['v3', 'v4'], ['v4', 't1'], ['v4', 't2'],
+      ['v4', 't3'], ['t1', 's1'], ['t2', 's1'], ['t3', 's1'], ['t4', 's1'],
+      ['s1', 's2'], ['s1', 's3'], ['s2', 's4'], ['s3', 's4'], ['s4', 's5'],
+      ['s1', 'q1'], ['s1', 'q2'], ['s1', 'q3'], ['s1', 'q4'],
+    ],
+    notes: [
+      '本质是「消息总线 + 服务发现 + 可靠投递」，不是简单的 HTTP 接口',
+      '弱网是常态：断线重连、离线队列、幂等去重、优先级、重试退避必须齐备',
+      '配置与任务要版本化 + 幂等 + 可回滚——一次误下发能搞停整个车队',
+    ],
+  },
 ];
