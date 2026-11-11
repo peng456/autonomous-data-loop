@@ -750,4 +750,61 @@ export default [
       '段合并（compaction）与 load 策略直接影响查询延迟，别只盯建索引',
     ],
   },
+  {
+    id: 'warehouse',
+    title: '数仓与数据湖治理',
+    desc: '湖存原始与半结构化 → 仓分层（ODS/DWD/DWS/ADS）→ 治理四件套 → 消费',
+    lanes: [
+      {
+        title: '数据湖',
+        boxes: [
+          { id: 'l1', label: '原始包\nbag / mcap → OSS', node: 'infra.oss' },
+          { id: 'l2', label: '解析片段 + 标注', node: 'infra.dataset' },
+          { id: 'l3', label: '表格式\nIceberg / Hudi', node: 'infra.lake' },
+          { id: 'l4', label: '冷归档\nHive / 低频', node: 'infra.cost' },
+        ],
+      },
+      {
+        title: '数仓分层',
+        boxes: [
+          { id: 'w1', label: 'ODS\n解析后原始', node: 'infra.warehouse' },
+          { id: 'w2', label: 'DWD\n片段 / 帧 / 事件明细' },
+          { id: 'w3', label: 'DWS\n场景 / 车 / 天 汇总' },
+          { id: 'w4', label: 'ADS\n看板 / 指标' },
+        ],
+      },
+      {
+        title: '治理',
+        boxes: [
+          { id: 'g1', label: '元数据 Catalog', node: 'infra.catalog' },
+          { id: 'g2', label: '血缘', node: 'infra.lineage' },
+          { id: 'g3', label: '质量规则', node: 'infra.quality' },
+          { id: 'g4', label: '权限与脱敏', node: 'infra.auth' },
+          { id: 'g5', label: '生命周期与成本', node: 'infra.cost' },
+          { id: 'g6', label: '标准与口径', node: 'infra.governance' },
+        ],
+      },
+      {
+        title: '消费',
+        boxes: [
+          { id: 'c1', label: 'BI 看板', node: 'infra.analytics' },
+          { id: 'c2', label: '算法取数 / 样本', node: 'stack.sample' },
+          { id: 'c3', label: '资产目录\n自助找数' },
+          { id: 'c4', label: '指标口径\n接管率 / MPI' },
+        ],
+      },
+    ],
+    links: [
+      ['l1', 'w1'], ['l2', 'w1'], ['l3', 'w1'], ['l4', 'w1'],
+      ['w1', 'w2'], ['w2', 'w3'], ['w3', 'w4'],
+      ['g1', 'w2'], ['g2', 'w2'], ['g3', 'w2'], ['g6', 'w3'],
+      ['g4', 'c1'], ['g5', 'l4'],
+      ['w4', 'c1'], ['w4', 'c4'], ['w2', 'c2'], ['g1', 'c3'],
+    ],
+    notes: [
+      '与互联网数仓最大的差异：事实是「视频片段」这种大对象，仓里只存 URI + 元数据，文件放湖',
+      '口径不统一是治理失效的第一信号：同一个「接管率」三个团队三个数',
+      '质量要前置到入库拦截；成本要下沉到团队核算，否则存储只增不减',
+    ],
+  },
 ];
