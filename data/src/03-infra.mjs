@@ -256,4 +256,51 @@ export default [
     q: '讲「标准-质量-安全-成本」四件套，各举一个落地动作，再给一个指标。',
     x: [{ to: 'infra.catalog', r: 'include' }, { to: 'infra.quality', r: 'include' }, { to: 'infra.cost', r: 'support' }],
   },
+  {
+    id: 'infra.stindex', t: '时空索引', en: 'Spatio-temporal Index', d: 'infra', lv: 3, p: 'infra.index',
+    def: '按「时间 + 空间」快速圈选片段：GeoHash / 网格做粗筛，R-tree / UBTree 做范围查询，Z-order 曲线把二维压成一维键；轨迹检索先用包围盒过滤，再做 DTW 精匹配。',
+    pts: [
+      '智驾的查询几乎都是「某区域 + 某时段 + 某标签」，时空索引是主键级能力，不是加分项',
+      'GeoHash 精度与索引大小的权衡：粒度越细召回越准，但前缀索引越长',
+      '与 OLAP 结合：把时空列做成分区键 / 前缀索引，比事后过滤快一个量级',
+      '轨迹相似检索分两段：包围盒粗筛（毫秒级）→ DTW/形状距离精排（贵但样本少）',
+    ],
+    q: '讲「粗筛 + 精查」两段式，并举一个「某区域某时段」的查询怎么落索引。',
+    x: [{ to: 'infra.index', r: 'include' }, { to: 'infra.milvus', r: 'support' }],
+  },
+  {
+    id: 'infra.etl', t: '大数据处理与 ETL 调优', en: 'Spark / Flink ETL', d: 'infra', lv: 2, p: 'infra.pipeline',
+    def: 'Spark 批处理 + Flink 流处理构建 TB 级管道。瓶颈通常在 shuffle、小文件 IO 与视频解码，而不是 CPU 算力；调优顺序应为「先看 IO 与倾斜，再看算子」。',
+    pts: [
+      '数据倾斜：加盐 / repartition / 广播小表；判断依据是少数 task 耗时远超中位数',
+      '小文件：合并 shard、控制分区粒度，否则 NameNode 与任务调度先崩',
+      '序列化与压缩：Kryo + Zstd，列存 Parquet 配合谓词下推',
+      '解码用 GPU 硬解，CPU 软解是吞吐天花板；幂等重跑是回填的前提',
+    ],
+    q: '讲一个具体案例：倾斜现象 → 怎么定位 → 加盐后耗时从 X 到 Y。',
+    x: [{ to: 'infra.compute', r: 'include' }, { to: 'infra.pipeline', r: 'support' }],
+  },
+  {
+    id: 'infra.sla', t: '数据服务 SLA', en: 'SLA / SLO', d: 'infra', lv: 2, p: 'infra.observability',
+    def: '用延迟、成功率、积压量定义数据服务可用性：事故片段 30 分钟内可检索、管道成功率 99.5%、检索 P99 < 300ms。SLO 要分层（接入/解析/入库/检索），否则出问题无法定位。',
+    pts: [
+      '没有对账就没有 SLA：车端应传 vs 云端实收，差异必须能解释',
+      '死信队列 + 重放是「成功率」的兜底，限流降级是「延迟」的兜底',
+      '容量规划按峰值回传算，不按平均值',
+      'SLA 要写到接口级，而不是「整条链路 99.9%」这种无法验证的承诺',
+    ],
+    q: '讲「分层 SLO + 对账 + 兜底」三件套，并举一次 SLA 告警的处置。',
+  },
+  {
+    id: 'mine.longtail', t: '长尾样本挖掘', en: 'Long-tail Mining', d: 'mine', lv: 2, p: 'mine.mining',
+    def: '专门捞「低频高危害」：规则枚举（异形车/施工区/动物）、相似度扩展（以图搜图找同类）、场景组合生成、失败案例聚类。长尾无法穷举，只能用「扩展 + 生成」放大覆盖。',
+    pts: [
+      '单点发现 → 相似度扩展，是把 1 个长尾变成 100 个的最便宜手段',
+      '评估看「新增场景簇数」而不是样本数，否则会被重复样本虚增',
+      '与仿真互补：真实数据保真，仿真补「采不到」的组合',
+      '要给长尾建台账：场景、频次、严重度、责任人、是否已进回归集',
+    ],
+    q: '讲「发现一个 → 扩展一类」的方法，并说明怎么证明扩出来的样本有价值。',
+    x: [{ to: 'mine.mining', r: 'include' }, { to: 'mine.retrieval', r: 'support' }],
+  },
 ];

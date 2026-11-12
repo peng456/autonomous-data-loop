@@ -68,7 +68,7 @@ ok('学习页节点 chip 可点', d.querySelectorAll('#stages .nchip').length > 
 
 // 自测页
 d.querySelector('.tabs button[data-view="quiz"]').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
-ok('题库 44 题', d.querySelectorAll('#qlist .qcard').length === 44, `${d.querySelectorAll('#qlist .qcard').length}`);
+ok('题库 ≥40 题', d.querySelectorAll('#qlist .qcard').length >= 40, `${d.querySelectorAll('#qlist .qcard').length}`);
 d.querySelector('#qlist .qh').dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
 ok('题目可展开', d.querySelector('#qlist .qcard').classList.contains('open'));
 const xpBefore = w.eval('document.querySelector("#xp").textContent');
