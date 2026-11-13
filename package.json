@@ -8,6 +8,7 @@
     "build:data": "node tools/build-data.mjs",
     "build:seo": "node tools/build-seo.mjs",
     "site": "node tools/build-site.mjs",
+    "deploy:cf": "wrangler pages deploy _site --project-name autonomous-data-loop --branch main --commit-dirty=true",
     "indexnow": "node tools/indexnow.mjs",
     "verify:seo": "node tools/verify-seo.mjs",
     "serve": "python3 -m http.server 8080",

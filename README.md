@@ -90,6 +90,28 @@ npm run site      # 组装 _site/，并把 index.html 里的 canonical / og:url 
 > 注意：换站点基址等于换域名，已收录的权重会丢，需要重新提交 sitemap / IndexNow / 搜索站长平台。
 > 只想换域名、不想丢权重的话，走「自定义域名 + 301」，别直接换 `SITE_BASE`。
 
+### 双站部署（GitHub Pages 主站 + Cloudflare Pages 镜像）
+
+一次 push 同时发两处，两边内容完全一致：
+
+| | 主站 | 镜像 |
+|---|---|---|
+| 地址 | `peng456.github.io/autonomous-data-loop/` | `autonomous-data-loop.pages.dev` |
+| 角色 | canonical 指向这里，搜索引擎只收这份 | 给人看 / 国内访问兜底 |
+| `SITE_BASE` | 不设（默认） | 不设（同上，canonical 仍指主站） |
+
+要点：**镜像不能有自己的 canonical**。两边都用默认基址，镜像上的 `canonical` 指回主站，
+搜索引擎会把 `pages.dev` 那份当重复内容合并到主站，不会分走收录。
+
+自动化靠仓库 Secret `CLOUDFLARE_API_TOKEN`（Cloudflare API Token，权限 `Account → Cloudflare Pages → Edit`）。
+没配这个 Secret 时那一步会自动跳过，不影响主站。
+
+想反过来（Cloudflare 当主站）时：设 `SITE_BASE` 为 Cloudflare 的域名，两边的 canonical 一起翻过去，
+然后去 GSC / Bing / 百度 重新提交新域名的 sitemap。
+
+> Cloudflare Pages 会把 `/topics/x.html` 308 跳到 `/topics/x`（漂亮 URL）。这不影响主站，
+> 镜像上的 `.html` 内链会多一跳。canonical 依旧指主站，所以对收录无影响。
+
 ## 目录结构
 
 ```

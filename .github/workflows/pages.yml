@@ -35,6 +35,19 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+      # 镜像：同一份 _site 再发一份到 Cloudflare Pages。
+      # canonical 仍指向 GitHub Pages（SITE_BASE 未设），所以镜像不会跟主站抢收录。
+      - name: 镜像部署到 Cloudflare Pages（未配置 secret 时自动跳过）
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 85c366cd995096d2efe805f92213c1dc
+        run: |
+          if [ -z "${CLOUDFLARE_API_TOKEN}" ]; then
+            echo "未配置 CLOUDFLARE_API_TOKEN，跳过镜像部署"
+            exit 0
+          fi
+          npx --yes wrangler@4 pages deploy _site \
+            --project-name autonomous-data-loop --branch main --commit-dirty=true
 
   deploy:
     needs: build
