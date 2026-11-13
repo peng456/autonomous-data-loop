@@ -4,7 +4,7 @@ export default [
   {
     id: 'global',
     title: '全局数据流',
-    desc: '车端采集 → 车云 mesh → 云端加工（解析/挖掘/标注/加工/样本中心）→ 训练 →（OTA 下发 ｜ 影子部署）→ 车端运行 → 影子回流',
+    desc: '车端采集 → 车云 mesh → 云端加工（解析/挖掘/标注/加工/样本中心）→ 训练 → 模型 →（OTA 下发 ｜ 影子模型部署）→ 车端运行 → 影子回流',
     // layout:'free' —— 自由坐标布局（复原白板原图：分区 + 括号分组 + 正交箭头）
     layout: 'free',
     canvas: { w: 1620, h: 1010 },
@@ -48,6 +48,7 @@ export default [
       { id: 'sr',     label: 'StarRocks 检索', x: 690, y: 658, w: 130, h: 30, node: 'stack.starrocks' },
 
       // ── 训练与发布 ──
+      { id: 'model',  label: '模型\n权重 / 版本', x: 1060, y: 212, w: 220, h: 42, node: 'train.exp' },
       { id: 'train',  label: '模型训练系统', x: 1060, y: 300, w: 220, h: 32, node: 'stack.lpai' },
       { id: 'fs',     label: '文件系统 JuiceFs', x: 1060, y: 350, w: 220, h: 30, node: 'train.dataloader' },
       { id: 'ota1',   label: 'OTA 系统（云端）', x: 1300, y: 300, w: 220, h: 32, node: 'stack.ota' },
@@ -80,23 +81,24 @@ export default [
     ],
     links: [
       ['sensor', 'enc'], ['enc', 'trig'], ['trig', 'dds'], ['dds', 'mesh1'],
-      ['mesh1', 'mesh2', '弱网 / 断点续传', { via: [[145, 412], [316, 412], [316, 258]] }],
+      ['mesh1', 'mesh2', '弱网/断点续传', { via: [[145, 412], [316, 412], [316, 258]], lb: [280, 300] }],
       ['mesh2', 'upload'], ['upload', 'comply'], ['comply', 'parse'], ['parse', 'mine'],
       ['mine', 'label'], ['label', 'prep'], ['prep', 'center'],
       ['center', 'factory'], ['center', 'oss'], ['center', 'sr'],
       ['factory', 'train', '样本 / 批次', { via: [[470, 730], [960, 730], [960, 316]] }],
-      ['train', 'fs'], ['train', 'ota1', 'OTA 下发'],
-      // 训练向下是两个分支：正式模型走 OTA 灰度下发；新模型走影子部署（并行比对、不接管控制）
-      ['train', 'shadowCloud', '影子部署', { via: [[1170, 104], [480, 104]] }],
+      ['train', 'fs'], ['train', 'model'],
+      // 训练产出模型；模型向下是两个下发分支：OTA 灰度 与 影子模型部署
+      ['model', 'ota1', 'OTA 下发', { lb: [1320, 284] }],
+      ['model', 'shadowCloud', '影子模型部署', { via: [[1170, 104], [480, 104]], lb: [824, 200] }],
       ['ota1', 'ota2'], ['ota2', 'run'],
-      ['run', 'upload', '影子回流'],
-      ['shadowCloud', 'shadowModel'], ['shadowModel', 'shadowV', '影子模型下发', { via: [[356, 211], [356, 448]] }],
+      ['run', 'upload', '影子回流', { lb: [878, 382] }],
+      ['shadowCloud', 'shadowModel'], ['shadowModel', 'shadowV', '影子模型下发', { via: [[356, 211], [356, 448]], lb: [300, 430] }],
       ['shadowV', 'rec'],
     ],
     notes: [
       '与原图一致：车端只管「采与筛」，云端管「存与算」，两条链路在车云 mesh 处交接',
       '样本中心是「基础文件 → 样本」的分层：TV / PCD / GPS / autolabel / manual_label，样本只做有限组合，防止无限扩张',
-      '训练出来是两个下发分支：正式模型走 OTA（云端 → 车端，按批次灰度）；新模型走影子部署（影子服务 → 影子模型 → ShadowDaemon），与主模型并行推理、不接管控制，差异数据再回流',
+      '训练产出模型（权重包 + 版本），模型是两个下发分支的分叉点：正式模型走 OTA（云端 → 车端，按批次灰度）；影子模型走影子模型部署（影子服务 → 影子模型 → ShadowDaemon），与主模型并行推理、不接管控制，差异数据再回流',
       '模型包与整车包解耦：模型包单独走 OTA，不跟整车包绑定发版',
       '样本粒度：2D / 3D / video / clip；技术栈：gin/laravel、Kafka/Redis、Greenplum/TDSQL/ES/StarRocks/OSS/Hive、Go/PHP、docker/k8s',
     ],

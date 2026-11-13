@@ -878,8 +878,10 @@
       out.push(`<path class="flink" d="${fRoute(a, b, opt)}" marker-end="url(#farrow)"/>`);
       const lbl = l[2];
       if (lbl) {
-        const mx = (a.x + a.w / 2 + b.x + b.w / 2) / 2;
-        const my = (a.y + a.h / 2 + b.y + b.h / 2) / 2;
+        // 默认放在两端中心点的中点；opt.lb=[x,y] 可显式指定位置，避开连线与方框
+        const lb = (opt && opt.lb) || null;
+        const mx = lb ? lb[0] : (a.x + a.w / 2 + b.x + b.w / 2) / 2;
+        const my = lb ? lb[1] : (a.y + a.h / 2 + b.y + b.h / 2) / 2;
         out.push(`<text class="flink-t" x="${mx}" y="${my - 4}" text-anchor="middle">${esc(lbl)}</text>`);
       }
     });
