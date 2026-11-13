@@ -4,7 +4,11 @@
   "private": true,
   "description": "数据闭环宇宙 · 无限画布，连接每一个知识点",
   "scripts": {
-    "build": "node tools/build-data.mjs",
+    "build": "node tools/build-data.mjs && node tools/build-seo.mjs",
+    "build:data": "node tools/build-data.mjs",
+    "build:seo": "node tools/build-seo.mjs",
+    "indexnow": "node tools/indexnow.mjs",
+    "verify:seo": "node tools/verify-seo.mjs",
     "serve": "python3 -m http.server 8080",
     "test": "node test.mjs"
   },

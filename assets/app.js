@@ -537,6 +537,11 @@
     if (center) centerOn(id);
     visit(id);
     draw();
+    // 可分享的深链：/?n=<nodeId>（知识点静态页的「在星图上打开」走这条）
+    try {
+      const next = `${location.pathname}?n=${encodeURIComponent(id)}`;
+      if (location.search !== `?n=${encodeURIComponent(id)}`) history.replaceState(null, '', next);
+    } catch { /* file:// 或受限环境下忽略 */ }
   }
 
   function clearSelection() {
@@ -952,7 +957,12 @@
     refreshHUD(); refreshChips();
     $('#obNodes').textContent = NODES.length;
 
-    if (LS.get('dlu-onboard', false)) $('#onboard').classList.add('hide');
+    // 深链：/?n=<nodeId> 或 /#<nodeId> 直接点亮某颗星（知识点静态页跳回星图用）
+    const deep = new URLSearchParams(location.search).get('n')
+      || (location.hash.length > 1 ? decodeURIComponent(location.hash.slice(1)) : '');
+    const wantDeep = !!deep && BYID.has(deep);
+
+    if (LS.get('dlu-onboard', false) || wantDeep) $('#onboard').classList.add('hide');
     $('#obGo').addEventListener('click', () => {
       $('#onboard').classList.add('hide');
       LS.set('dlu-onboard', true);
@@ -960,10 +970,12 @@
       if (first) selectNode(first, true);
     });
 
-    if (window.innerWidth <= 820) {
+    if (window.innerWidth <= 820 && !wantDeep) {
       // 移动端：首屏不全图，聚焦中心可读
       setTimeout(() => { view.k = Math.min(1.1, view.k); draw(); }, 60);
     }
+
+    if (wantDeep) selectNode(deep, true);
   }
 
   boot();

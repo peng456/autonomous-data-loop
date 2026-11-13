@@ -1,2 +1,9 @@
 node_modules/
 .DS_Store
+
+# SEO 产物：由 tools/build-seo.mjs 在构建时生成，不入库
+/robots.txt
+/sitemap.xml
+/llms.txt
+/topics/
+/8f3c1d6a4b9e27c05a7d31f8e6b2c940.txt

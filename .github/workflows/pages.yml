@@ -26,12 +26,16 @@ jobs:
       - run: npm ci
       - name: 内容校验 + 冒烟测试
         run: npm test
-      - name: 生成图谱数据
+      - name: 生成图谱数据 + 静态 SEO 产物
         run: npm run build
+      - name: 校验 SEO 产物（正文量 / sitemap / 结构化数据 / 深链接）
+        run: npm run verify:seo
       - name: 组装站点（只发布运行所需文件）
         run: |
           mkdir -p _site
-          cp -r index.html assets data _site/
+          cp -r index.html assets data topics _site/
+          cp robots.txt sitemap.xml llms.txt _site/
+          cp ./*.txt _site/          # 含 IndexNow 校验文件
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
@@ -45,3 +49,10 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: IndexNow 主动推送（Bing / Yandex 秒级发现）
+        run: node tools/indexnow.mjs
+        continue-on-error: true

@@ -10,7 +10,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Content: CC BY-SA 4.0](https://img.shields.io/badge/content-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 
-**在线体验**：`https://peng456.github.io/autonomous-data-loop/`
+**在线体验**：<https://peng456.github.io/autonomous-data-loop/>
+
+**不开 JS 也能读全文**：[207 个知识点总览](https://peng456.github.io/autonomous-data-loop/topics/) · [47 道数据闭环面试题](https://peng456.github.io/autonomous-data-loop/topics/qa.html)
 
 ![智驾数据闭环宇宙](assets/og.png?v=2)
 
