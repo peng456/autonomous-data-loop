@@ -1,7 +1,8 @@
 // 部署后主动推送：IndexNow（Bing / Yandex / Seznam 秒级发现，不用等爬虫自然来）
 // 用法：node tools/indexnow.mjs
 // 依赖部署已完成（会先拉线上 sitemap.xml 再提交，顺带验证部署是否生效）。
-const SITE = 'https://peng456.github.io/autonomous-data-loop';
+import { SITE } from './site.mjs';
+
 const KEY = '8f3c1d6a4b9e27c05a7d31f8e6b2c940';
 const HOST = new URL(SITE).host;
 

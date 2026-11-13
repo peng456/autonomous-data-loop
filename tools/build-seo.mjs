@@ -12,9 +12,9 @@
 import { writeFileSync, readFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { SITE } from './site.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SITE = 'https://peng456.github.io/autonomous-data-loop';
 const SITE_NAME = '智驾数据闭环宇宙';
 const TODAY = new Date().toISOString().slice(0, 10);
 const INDEXNOW_KEY = '8f3c1d6a4b9e27c05a7d31f8e6b2c940';

@@ -28,14 +28,10 @@ jobs:
         run: npm test
       - name: 生成图谱数据 + 静态 SEO 产物
         run: npm run build
-      - name: 校验 SEO 产物（正文量 / sitemap / 结构化数据 / 深链接）
+      - name: 组装发布目录 _site/（按 SITE_BASE 重写绝对 URL）
+        run: npm run site
+      - name: 校验 SEO 产物（基址 / 正文量 / sitemap / 结构化数据 / 深链接）
         run: npm run verify:seo
-      - name: 组装站点（只发布运行所需文件）
-        run: |
-          mkdir -p _site
-          cp -r index.html assets data topics _site/
-          cp robots.txt sitemap.xml llms.txt _site/
-          cp ./*.txt _site/          # 含 IndexNow 校验文件
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

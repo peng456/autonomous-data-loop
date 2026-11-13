@@ -4,9 +4,9 @@ import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
+import { SITE } from './site.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SITE = 'https://peng456.github.io/autonomous-data-loop';
 const fails = [];
 const ok = (n, c, x = '') => { console.log(`${c ? '✓' : '✗'} ${n}${x ? '  ' + x : ''}`); if (!c) fails.push(n); };
 const read = p => readFileSync(join(ROOT, p), 'utf8');
@@ -58,8 +58,15 @@ const llmsBytes = Buffer.byteLength(llms, 'utf8');
 ok('llms.txt ≥ 50 KB', llmsBytes >= 50000, `${(llmsBytes / 1024).toFixed(0)} KB`);
 ok('llms.txt 链接了全部知识点页', topicPages.every(f => llms.includes(`${SITE}/topics/${f}`)));
 
-// ── 6. 深链接：/?n=<id> 能直接点亮对应星 ──
-const html = read('index.html').replace(/<script src="[^"]+"><\/script>/g, '');
+// ── 6. 入口页基址（优先校验组装后的 _site/index.html，那里绝对 URL 已按实际基址重写）──
+const shellPath = existsSync(join(ROOT, '_site', 'index.html')) ? '_site/index.html' : 'index.html';
+const shell = read(shellPath);
+ok(`入口页 canonical = 站点基址`, shell.includes(`<link rel="canonical" href="${SITE}/">`), `${shellPath} · ${SITE}`);
+ok('入口页有 <noscript> 正文入口', /<noscript>/.test(shell));
+ok('入口页无残留默认基址', !shell.includes('peng456.github.io') || SITE.includes('peng456.github.io'));
+
+// ── 7. 深链接：/?n=<id> 能直接点亮对应星 ──
+const html = shell.replace(/<script src="[^"]+"><\/script>/g, '');
 const dom = new JSDOM(html, {
   runScripts: 'dangerously', pretendToBeVisual: true, url: 'https://example.github.io/?n=collect.sensor',
   beforeParse(w) {

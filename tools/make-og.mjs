@@ -5,6 +5,7 @@ import { deflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import opentype from 'opentype.js';
+import { SITE } from './site.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dir, '..');
@@ -179,8 +180,31 @@ for (let y = 0; y < H; y++) {
 }
 
 // ── 文字渲染（opentype 轮廓 → 扫描线填充 → 2x 超采样）──
-const fontBuf = readFileSync('/system/fonts/HarmonyOS_Sans_SC.ttf');
-const font = opentype.parse(fontBuf.buffer.slice(fontBuf.byteOffset, fontBuf.byteOffset + fontBuf.byteLength));
+// 字体：优先 OG_FONT 环境变量，否则按平台候选逐个试。
+// 注意 opentype.js 不支持 .ttc 字体集合（PingFang / Songti 都是集合），只有单体 ttf/otf 能用。
+const FONT_CANDIDATES = [
+  process.env.OG_FONT,
+  '/system/fonts/HarmonyOS_Sans_SC.ttf',
+  '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
+  '/Library/Fonts/Arial Unicode.ttf',
+  '/usr/share/fonts/opentype/noto/NotoSansSC-Regular.otf',
+  '/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttf',
+].filter(Boolean);
+
+let font = null, fontPath = null;
+for (const p of FONT_CANDIDATES) {
+  try {
+    const b = readFileSync(p);
+    font = opentype.parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
+    fontPath = p;
+    break;
+  } catch { /* 不存在，或不支持的字体集合 */ }
+}
+if (!font) {
+  console.error('✗ 找不到可用中文字体。设 OG_FONT=/path/to/font.ttf（单个 ttf/otf，不要 .ttc）后重跑。\n  试过：\n  ' + FONT_CANDIDATES.join('\n  '));
+  process.exit(1);
+}
+console.log(`  字体：${fontPath}`);
 
 function flatten(cmds) {
   const polys = []; let cur = null, x = 0, y = 0;
@@ -267,7 +291,8 @@ for (let x = 72; x < 132; x++) line(x, 322, x, 322, 232, 185, 92, 0.85);
 drawText(`${nodes.length} 个知识点 · ${edges.length} 条关联`, 21, 72, 368, [205, 216, 235]);
 drawText(`${U.qa.length} 道面试题 · ${U.path.length} 个学习阶段`, 21, 72, 402, [205, 216, 235]);
 // 底部
-drawText('peng456.github.io/autonomous-data-loop', 14, 72, 566, DIM);
+// 底部：站点地址（跟着 SITE_BASE 走，换域名后重跑本脚本即可）
+drawText(SITE.replace(/^https?:\/\//, ''), 14, 72, 566, DIM);
 
 // ── PNG 编码 ──
 const rgb = Buffer.alloc(W * H * 3);

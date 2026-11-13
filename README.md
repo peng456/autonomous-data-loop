@@ -65,6 +65,31 @@ npm test         # 冒烟测试（jsdom，18 项断言）
 universe.example.com
 ```
 
+### 换托管 / 换域名（Cloudflare Pages、自有域名、预览环境）
+
+站点基址是**唯一来源**，定义在 `tools/site.mjs`，可用 `SITE_BASE` 环境变量覆盖。
+换域名不需要改代码：
+
+```bash
+SITE_BASE=https://autonomous-data-loop.pages.dev npm run build
+npm run site      # 组装 _site/，并把 index.html 里的 canonical / og:url 一并重写
+```
+
+`SITE_BASE` 会同时影响 `sitemap.xml`、`llms.txt`、207 个知识点页的 canonical、
+`index.html` 的 canonical / og:url / og:image / JSON-LD，以及 IndexNow 的 host。
+`npm run verify:seo` 会断言「入口页 canonical 与实际基址一致、无残留旧基址」，错了 CI 会红。
+
+换成 Cloudflare Pages 时（免费版静态资源请求不限量）：
+
+| 设置项 | 值 |
+|---|---|
+| Build command | `npm run build && npm run site` |
+| Build output directory | `_site` |
+| 环境变量 | `SITE_BASE` = 你的域名（**不设**则仍是 GitHub Pages 地址） |
+
+> 注意：换站点基址等于换域名，已收录的权重会丢，需要重新提交 sitemap / IndexNow / 搜索站长平台。
+> 只想换域名、不想丢权重的话，走「自定义域名 + 301」，别直接换 `SITE_BASE`。
+
 ## 目录结构
 
 ```
@@ -81,7 +106,14 @@ universe.example.com
 │  │  ├─ 13-vehicle.mjs    # 车端基础（Ubuntu/ROS2/DDS/GPU/CPU/域控/时同步）
 │  │  └─ …                 # 共 14 个源文件（域内容 + 题库 + 学习路径）
 │  └─ universe.js          # 构建产物（自动生成，勿手改）
-├─ tools/build-data.mjs    # 内容 → 图数据 + 校验
+├─ tools/
+│  ├─ site.mjs             # ★ 站点基址唯一来源（SITE_BASE 可覆盖）
+│  ├─ build-data.mjs       # 内容 → 图数据 + 校验
+│  ├─ build-seo.mjs        # 207 个知识点静态页 + sitemap/robots/llms.txt
+│  ├─ build-site.mjs       # 组装 _site/（按实际基址重写绝对 URL）
+│  ├─ verify-seo.mjs       # SEO 回归闸门（正文量 / canonical / 深链接）
+│  └─ indexnow.mjs         # 部署后主动推送 Bing / Yandex
+├─ topics/                 # 构建产物：知识点静态页（不入库）
 ├─ .github/workflows/      # Pages 部署
 └─ test.mjs                # jsdom 冒烟测试
 ```
